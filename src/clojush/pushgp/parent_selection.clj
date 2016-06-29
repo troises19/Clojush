@@ -27,6 +27,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lexicase selection
 
+(defn weighted-shuffle
+  [map-of-weighted-cases]
+  (loop [map-of-weighted-cases map-of-weighted-cases
+         shuffled-case-list []]
+    (if (empty? map-of-weighted-cases)
+      shuffled-case-list
+      (let [total (reduce + (vals map-of-weighted-cases))
+            randnum (rand total)
+            test-cases-with-endpoints (reductions (fn [[cur-ind cur-sum]
+                                                       [new-ind new-sum]]
+                                                    [new-ind (+ cur-sum new-sum)])
+                                                  map-of-weighted-cases)
+            chosen-test-case (first (first (filter (fn [[test-case-number endpoint]]
+                                                     (< randnum endpoint))
+                                                   test-cases-with-endpoints)))]
+        (recur (dissoc map-of-weighted-cases chosen-test-case)
+               (conj shuffled-case-list chosen-test-case))))))
+
 (defn retain-one-individual-per-error-vector
   "Retains one random individual to represent each error vector."
   [pop]
