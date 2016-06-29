@@ -27,6 +27,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lexicase selection
 
+
+(defn numshuffle
+  [lyst newlyst]
+  (let [total (reduce + (vals(lyst)))
+        randnum (rand-int total)]
+    (loop [lyst randnum]
+      (if <= (- randnum (val (first lyst))) 0
+        (conj newlyst (get lyst (first key)))
+        (recur (rest lyst) (- randnum (val(first lyst))))))))
+              
 (defn retain-one-individual-per-error-vector
   "Retains one random individual to represent each error vector."
   [pop]
