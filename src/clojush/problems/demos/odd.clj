@@ -29,4 +29,4 @@
    :atom-generators (concat (registered-for-stacks [:integer :boolean :code :exec])
                             (list (fn [] (lrand-int 100))
                                   'in1))
-   })
+   :population-size 742})

@@ -91,7 +91,7 @@
                                                              #(lrand-nth (str "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                                                               "abcdefghijklmnopqrstuvwxyz"
                                                                               "0123456789"))))))
-        :population-size 500
+        :population-size 1000
         :max-generations 200
         :epigenetic-markers []
         :genetic-operator-probabilities {:alternation 0.5
