@@ -114,8 +114,8 @@
   "Returns an individual that does the best on the fitness cases when considered one at a
    time in random order.  If trivial-geography-radius is non-zero, selection is limited to parents within +/- r of location"
   [pop location {:keys [trivial-geography-radius]}]
-  (println @testcase-weights)
-  (println (weighted-shuffle))
+  ;(println @testcase-weights)
+  ;(println (weighted-shuffle))
  
   (loop [survivors (retain-one-individual-per-error-vector pop)
          cases (weighted-shuffle)]
