@@ -78,6 +78,14 @@
                                                    test-cases-with-endpoints)))]
         (recur (dissoc map-of-weighted-cases chosen-test-case)
                (conj shuffled-case-list chosen-test-case))))))
+(defn variance 
+  [vector-of-error]
+  (def sqr (fn [x] (* x x)))
+  (let [mean-vect (/ (reduce + vector-of-error)(count vector-of-error))]
+    (/
+      (reduce +
+              (map #(sqr (- % mean-vect)) vector-of-error))
+      (count vector-of-error))))
 
 
 (defn calculate-test-case-weights
@@ -85,17 +93,29 @@
   (let [test-case-error-vectors (apply map vector (map :errors (map deref pop-agents))) 
         bias-function (case weighted-lexicase-bias
                         :number-of-zeros (fn [vector-of-errors] (count(filter zero? vector-of-errors)))
-                        :sum (fn[vector-of-errors] (reduce + vector-of-errors)))]
+                        :sum (fn[vector-of-errors] (reduce + vector-of-errors))
+                        :average (fn [vector-of-errors](/ (reduce + vector-of-errors)(count vector-of-errors))
+                                   )
+                        :number-of-nonzero (fn [vector-of-errors] (/ 1 (count(filter zero? vector-of-errors))))
+                        :variance (fn [vector-of-errors](variance vector-of-errors)))
+                        ]
     (reset! testcase-weights (into {} (map vector 
                                            (range)
                                            (map bias-function test-case-error-vectors))))))
 
+
+  
+
+      
+            
+        
+        
 (defn weighted-lexicase-selection
   "Returns an individual that does the best on the fitness cases when considered one at a
    time in random order.  If trivial-geography-radius is non-zero, selection is limited to parents within +/- r of location"
   [pop location {:keys [trivial-geography-radius]}]
-  ;(println @testcase-weights)
-  ;(println (weighted-shuffle))
+  (println @testcase-weights)
+  (println (weighted-shuffle))
  
   (loop [survivors (retain-one-individual-per-error-vector pop)
          cases (weighted-shuffle)]
