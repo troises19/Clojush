@@ -27,29 +27,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lexicase selection
 
-(defn weighted-shuffle
-  [map-of-weighted-cases]
-  (loop [map-of-weighted-cases map-of-weighted-cases
-         shuffled-case-list []]
-    (if (empty? map-of-weighted-cases)
-      shuffled-case-list
-      (let [total (reduce + (vals map-of-weighted-cases))
-            randnum (rand total)
-            test-cases-with-endpoints (reductions (fn [[cur-ind cur-sum]
-                                                       [new-ind new-sum]]
-                                                    [new-ind (+ cur-sum new-sum)])
-                                                  map-of-weighted-cases)
-            chosen-test-case (first (first (filter (fn [[test-case-number endpoint]]
-                                                     (< randnum endpoint))
-                                                   test-cases-with-endpoints)))]
-        (recur (dissoc map-of-weighted-cases chosen-test-case)
-               (conj shuffled-case-list chosen-test-case))))))
+
+
+
 
 (defn retain-one-individual-per-error-vector
   "Retains one random individual to represent each error vector."
   [pop]
   (map lrand-nth (vals (group-by #(:errors %) pop))))
-  
+
 (defn lexicase-selection
   "Returns an individual that does the best on the fitness cases when considered one at a
    time in random order.  If trivial-geography-radius is non-zero, selection is limited to parents within +/- r of location"
@@ -73,6 +59,56 @@
           (recur (filter #(= (nth (:errors %) (first cases)) min-err-for-case)
                          survivors)
                  (rest cases)))))))
+
+
+(defn weighted-shuffle
+  []
+  (loop [map-of-weighted-cases @testcase-weights
+         shuffled-case-list []]
+    (if (empty? map-of-weighted-cases)
+      shuffled-case-list
+      (let [total (reduce + (vals map-of-weighted-cases))
+            randnum (rand total)
+            test-cases-with-endpoints (reductions (fn [[cur-ind cur-sum]
+                                                       [new-ind new-sum]]
+                                                    [new-ind (+ cur-sum new-sum)])
+                                                  map-of-weighted-cases)
+            chosen-test-case (first (first (filter (fn [[test-case-number endpoint]]
+                                                     (<= randnum endpoint))
+                                                   test-cases-with-endpoints)))]
+        (recur (dissoc map-of-weighted-cases chosen-test-case)
+               (conj shuffled-case-list chosen-test-case))))))
+
+
+(defn calculate-test-case-weights
+  [pop-agents {:keys [weighted-lexicase-bias]}]
+  (let [test-case-error-vectors (apply map vector (map :errors (map deref pop-agents))) 
+        bias-function (case weighted-lexicase-bias
+                        :number-of-zeros (fn [vector-of-errors] (count(filter zero? vector-of-errors)))
+                        :sum (fn[vector-of-errors] (reduce + vector-of-errors)))]
+    (reset! testcase-weights (into {} (map vector 
+                                           (range)
+                                           (map bias-function test-case-error-vectors))))))
+
+(defn weighted-lexicase-selection
+  "Returns an individual that does the best on the fitness cases when considered one at a
+   time in random order.  If trivial-geography-radius is non-zero, selection is limited to parents within +/- r of location"
+  [pop location {:keys [trivial-geography-radius]}]
+  ;(println @testcase-weights)
+  ;(println (weighted-shuffle))
+ 
+  (loop [survivors (retain-one-individual-per-error-vector pop)
+         cases (weighted-shuffle)]
+    (if (or (empty? cases)
+            (empty? (rest survivors)))
+      (lrand-nth survivors)
+      (let [min-err-for-case (apply min (map #(nth % (first cases))
+                                             (map #(:errors %) survivors)))]
+        (recur (filter #(= (nth (:errors %) (first cases)) min-err-for-case)
+                       survivors)
+               (rest cases))))))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; elitegroup lexicase selection
@@ -185,6 +221,7 @@
                    :leaky-lexicase (if (< (lrand) (:lexicase-leakage argmap))
                                      (uniform-selection pop-with-meta-errors)
                                      (lexicase-selection pop-with-meta-errors location argmap))
+                   :weighted-lexicase (weighted-lexicase-selection pop-with-meta-errors location argmap)
                    :uniform (uniform-selection pop-with-meta-errors)
                    (throw (Exception. (str "Unrecognized argument for parent-selection: "
                                            parent-selection))))]

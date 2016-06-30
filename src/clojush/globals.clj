@@ -37,6 +37,7 @@
 (def timer-atom (atom 0)) ;; Used for timing of different parts of PushGP
 (def timing-map (atom {:initialization 0 :reproduction 0 :report 0 :fitness 0 :other 0}))  ;; Used for timing of different parts of pushgp
 (def solution-rates (atom (repeat 0))) ;; Used in historically-assessed hardness
+(def testcase-weights (atom {})) ;; DO THIS
 (def elitegroups (atom ())) ;; Used for elitegroup lexicase selection (will only work if lexicase-selection is off)
 (def population-behaviors (atom ())) ;; Used to store the behaviors of the population for use in tracking behavioral diversity
 (def selection-counts (atom {})) ;; Used to store the number of selections for each individual, indexed by UUIDs
