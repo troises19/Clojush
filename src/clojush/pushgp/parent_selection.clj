@@ -90,6 +90,11 @@
               (map #(sqr (- % mean-vect)) vector-of-error))
       (count vector-of-error))))
 
+(defn non-zero
+  [vector-of-error]
+  (- (count vector-of-error)(count(filter zero? vector-of-error))))
+
+
 
 (defn calculate-test-case-weights
   [pop-agents {:keys [weighted-lexicase-bias]}]
@@ -99,19 +104,16 @@
                         :sum (fn[vector-of-errors] (reduce + vector-of-errors))
                         :average (fn [vector-of-errors](/ (reduce + vector-of-errors)(count vector-of-errors))
                                    )
-                        :number-of-nonzero (fn [vector-of-errors] (/ 1 (count(filter zero? vector-of-errors))))
-                        :variance (fn [vector-of-errors](variance vector-of-errors)))
-                        ]
+                        :number-of-nonzero (fn [vector-of-errors] (non-zero vector-of-errors))
+                        :variance (fn [vector-of-errors](variance vector-of-errors))
+                        :number-of-zeros-inverse (fn [vector-of-errors] (/ 1 (count(filter zero? vector-of-errors))))
+                        )]
     (reset! testcase-weights (into {} (map vector 
                                            (range)
                                            (map bias-function test-case-error-vectors))))))
 
 
-  
 
-      
-            
-        
         
 (defn weighted-lexicase-selection
   "Returns an individual that does the best on the fitness cases when considered one at a
