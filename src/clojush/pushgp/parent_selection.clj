@@ -61,6 +61,9 @@
                  (rest cases)))))))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;weighted lexicase selection
+
 (defn weighted-shuffle
   []
   (loop [map-of-weighted-cases @testcase-weights
