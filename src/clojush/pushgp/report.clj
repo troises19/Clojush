@@ -247,7 +247,7 @@
            problem-specific-report total-error-method
            parent-selection print-homology-data max-point-evaluations
            print-error-frequencies-by-case normalization autoconstructive
-           print-selection-counts
+           print-selection-counts 
            ;; The following are for CSV or JSON logs
            print-csv-logs print-json-logs csv-log-filename json-log-filename
            log-fitnesses-for-all-cases json-log-program-strings
@@ -300,6 +300,11 @@
         ]
     (when print-error-frequencies-by-case
       (println "Error frequencies by case:" (doall (map frequencies (apply map vector (map :errors population))))))
+    (when (= parent-selection :weighted-lexicase)
+      (let [total (reduce + (vals @testcase-weights))]
+        (println "Test Case Bias Weights" 
+                 (into (sorted-map) (map #(vector (first %) (float(/ (second %) total))) 
+                                         @testcase-weights)))))
     (when (some #{parent-selection} #{:lexicase :elitegroup-lexicase :leaky-lexicase}) (lexicase-report population argmap))
     (when (= total-error-method :ifs) (implicit-fitness-sharing-report population argmap))
     (println (format "--- Best Program (%s) Statistics ---" (str "based on " (name err-fn))))

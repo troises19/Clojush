@@ -79,20 +79,41 @@
             chosen-test-case (first (first (filter (fn [[test-case-number endpoint]]
                                                      (<= randnum endpoint))
                                                    test-cases-with-endpoints)))]
-        (recur (dissoc map-of-weighted-cases chosen-test-case)
-               (conj shuffled-case-list chosen-test-case))))))
+        (if (zero? total)
+          (concat shuffled-case-list (shuffle (keys map-of-weighted-cases)))
+          (recur (dissoc map-of-weighted-cases chosen-test-case)
+                 (conj shuffled-case-list chosen-test-case)))))))
 (defn variance 
   [vector-of-error]
-  (def sqr (fn [x] (* x x)))
-  (let [mean-vect (/ (reduce + vector-of-error)(count vector-of-error))]
+  (def sqr (fn [x] (*' x x)))
+  (let [mean-vect (/ (reduce +' vector-of-error)(count vector-of-error))]
     (/
-      (reduce +
-              (map #(sqr (- % mean-vect)) vector-of-error))
+      (reduce +'
+              (map #(sqr (-' % mean-vect)) vector-of-error))
       (count vector-of-error))))
 
 (defn non-zero
   [vector-of-error]
   (- (count vector-of-error)(count(filter zero? vector-of-error))))
+
+(defn median
+  [vector-of-error]
+  (let [sorted (sort vector-of-error) 
+        counted (count vector-of-error)
+        bottom (dec (quot counted 2))]
+    (if (odd? counted)
+      (nth sorted (quot counted 2))
+      (/ (+(nth sorted (quot counted 2))(nth sorted bottom))2))))
+
+(defn number-zero-inverse
+  [vector-of-error]
+  (if (= (count(filter zero? vector-of-error))0)
+    2
+    (/ 1 (count(filter zero? vector-of-error)))))
+
+
+    
+      
 
 
 
@@ -106,7 +127,8 @@
                                    )
                         :number-of-nonzero (fn [vector-of-errors] (non-zero vector-of-errors))
                         :variance (fn [vector-of-errors](variance vector-of-errors))
-                        :number-of-zeros-inverse (fn [vector-of-errors] (/ 1 (count(filter zero? vector-of-errors))))
+                        :number-of-zeros-inverse (fn [vector-of-errors] (number-zero-inverse vector-of-errors))
+                        :median (fn [vector-of-errors] (median vector-of-errors))
                         )]
     (reset! testcase-weights (into {} (map vector 
                                            (range)
