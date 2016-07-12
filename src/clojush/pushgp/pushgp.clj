@@ -308,6 +308,8 @@ into @push-argmap first."
           ;; calculate the test case weights
           (when (= (:parent-selection @push-argmap) :weighted-lexicase)
             (calculate-test-case-weights pop-agents @push-argmap))
+          (when (= (:parent-selection @push-argmap) :bias-lexicase)
+            (calculate-test-case-weights pop-agents @push-argmap))
           ;; create global structure to support elite group lexicase selection
           (when (= (:parent-selection @push-argmap) :elitegroup-lexicase)
             (build-elitegroups pop-agents))

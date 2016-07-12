@@ -156,6 +156,48 @@
                (rest cases))))))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;biased lexicase selection
+
+
+(defn case-order
+  []
+  (loop [map-of-weighted-cases @testcase-weights
+         ordered-list []]
+    (if (empty? map-of-weighted-cases)
+      ordered-list
+      (let [chosen-test-case (key(apply max-key val map-of-weighted-cases))]
+        (recur (dissoc map-of-weighted-cases chosen-test-case)
+                 (conj ordered-list chosen-test-case))))))
+    
+    
+    
+(defn bias-lexicase-selection
+ [pop location {:keys [tournament-size trivial-geography-radius
+                       ]}]
+ (println @testcase-weights)
+ (let [tournament-set 
+       (doall
+         (for [_ (range tournament-size)]
+           (nth pop
+                (if (zero? trivial-geography-radius)
+                  (lrand-int (count pop))
+                  (mod (+ location (- (lrand-int (+ 1 (* trivial-geography-radius 2))) trivial-geography-radius))
+                       (count pop))))))]
+   
+   (loop [survivors (retain-one-individual-per-error-vector tournament-set)
+        cases (case-order)]
+   (if (or (empty? cases)
+           (empty? (rest survivors)))
+     (lrand-nth survivors)
+     (let [min-err-for-case (apply min (map #(nth % (first cases))
+                                            (map #(:errors %) survivors)))]
+       (recur (filter #(= (nth (:errors %) (first cases)) min-err-for-case)
+                      survivors)
+              (rest cases)))))))
+        
+  
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; elitegroup lexicase selection
@@ -269,6 +311,7 @@
                                      (uniform-selection pop-with-meta-errors)
                                      (lexicase-selection pop-with-meta-errors location argmap))
                    :weighted-lexicase (weighted-lexicase-selection pop-with-meta-errors location argmap)
+                   :bias-lexicase (bias-lexicase-selection pop-with-meta-errors location argmap)
                    :uniform (uniform-selection pop-with-meta-errors)
                    (throw (Exception. (str "Unrecognized argument for parent-selection: "
                                            parent-selection))))]
