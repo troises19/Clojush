@@ -175,7 +175,6 @@
 (defn bias-lexicase-selection
  [pop location {:keys [tournament-size trivial-geography-radius
                        ]}]
- (println @testcase-weights)
  (let [tournament-set 
        (doall
          (for [_ (range tournament-size)]
