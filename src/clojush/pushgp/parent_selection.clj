@@ -110,6 +110,11 @@
   (if (= (count(filter zero? vector-of-error))0)
     2
     (/ 1 (count(filter zero? vector-of-error)))))
+(defn average-inverse
+  [vector-of-error]
+  (if (= (count(filter zero? vector-of-error)) (count vector-of-error))
+    1000
+    (/ 1 (/ (reduce + vector-of-error)(count vector-of-error)))))
 
 
     
@@ -175,7 +180,6 @@
 (defn bias-lexicase-selection
  [pop location {:keys [tournament-size trivial-geography-radius
                        ]}]
- (println @testcase-weights)
  (let [tournament-set 
        (doall
          (for [_ (range tournament-size)]
