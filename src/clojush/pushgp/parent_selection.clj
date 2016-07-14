@@ -92,6 +92,12 @@
               (map #(sqr (-' % mean-vect)) vector-of-error))
       (count vector-of-error))))
 
+(defn variance-inverse
+  [vector-of-error]
+  (if (= (variance vector-of-error)0)
+    200
+    (/ 1 (variance vector-of-error))))
+
 (defn non-zero
   [vector-of-error]
   (- (count vector-of-error)(count(filter zero? vector-of-error))))
@@ -104,6 +110,11 @@
     (if (odd? counted)
       (nth sorted (quot counted 2))
       (/ (+(nth sorted (quot counted 2))(nth sorted bottom))2))))
+(defn median-inverse
+  [vector-of-error]
+  (if (= 0 (median vector-of-error))
+    2
+    (/ 1 (median vector-of-error))))
 
 (defn number-zero-inverse
   [vector-of-error]
@@ -111,6 +122,11 @@
     2
     (/ 1 (count(filter zero? vector-of-error)))))
 
+(defn non-zero-inverse
+  [vector-of-error]
+  (if (= (count vector-of-error)(count(filter zero? vector-of-error)))
+    2
+    (/ 1 (- (count vector-of-error)(count(filter zero? vector-of-error))))))
 
     
       
@@ -126,9 +142,12 @@
                         :average (fn [vector-of-errors](/ (reduce + vector-of-errors)(count vector-of-errors))
                                    )
                         :number-of-nonzero (fn [vector-of-errors] (non-zero vector-of-errors))
+                        :number-of-nonzero-inverse (fn [vector-of-error] (non-zero-inverse vector-of-error))
                         :variance (fn [vector-of-errors](variance vector-of-errors))
+                        :variance-inverse (fn [vector-of-error] (variance-inverse vector-of-error))
                         :number-of-zeros-inverse (fn [vector-of-errors] (number-zero-inverse vector-of-errors))
                         :median (fn [vector-of-errors] (median vector-of-errors))
+                        :median-inverse (fn [vector-of-error] (median-inverse vector-of-error))
                         )]
     (reset! testcase-weights (into {} (map vector 
                                            (range)
