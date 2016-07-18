@@ -157,8 +157,9 @@
 
         
 (defn weighted-lexicase-selection
-  "Returns an individual that does the best on the fitness cases when considered one at a
-   time in random order.  If trivial-geography-radius is non-zero, selection is limited to parents within +/- r of location"
+  "Returns an individual that does the best on the fitness cases when considered one at a time in a random biased order 
+with more weight given to certain cases by some metric.
+If trivial-geography-radius is non-zero, selection is limited to parents within +/- r of location"
   [pop location {:keys [trivial-geography-radius]}]
   ;(println @testcase-weights)
   ;(println (weighted-shuffle))
@@ -213,7 +214,69 @@
        (recur (filter #(= (nth (:errors %) (first cases)) min-err-for-case)
                       survivors)
               (rest cases)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;ranked lexicase selection
         
+(defn rank-cases
+  "This takes a the @testcase-weights and returns a list of tast case ordered by rank"       
+  []
+  (loop [map-of-weighted-cases @testcase-weights
+         ranked-list []]
+    (if (empty? map-of-weighted-cases)
+      ranked-list
+      (let [chosen-test-case (key(apply max-key val map-of-weighted-cases))]
+       (recur (dissoc map-of-weighted-cases chosen-test-case)
+                (conj ranked-list chosen-test-case))))))
+
+
+
+(defn bias-ordering-of-cases-based-on-rank
+  "Takes list of test cases ranked by some metric, and returns a biased shuffled
+   list of cases, earlier-ranked cases have higher probability of coming sooner
+   in the shuffled ordering."
+  []
+  (let [ranked-cases (rank-cases)]
+  (loop [result []
+         remaining-cases (vec ranked-cases)
+         number-cases-remaining (count ranked-cases)]
+    (if (empty? remaining-cases) 
+      result
+      (let [upper-bound (lrand-int number-cases-remaining)
+            index (lrand-int (inc upper-bound))]
+        (recur (conj result (nth remaining-cases index))
+               (vec (concat (subvec remaining-cases 0 index)
+                            (subvec remaining-cases (inc index))))
+               (dec number-cases-remaining)))))))
+
+(defn ranked-lexicase-selection
+  "Returns an individual that does the best on the fitness cases when considered one at a
+   time in a biased order determined by a rank of some metric.  If trivial-geography-radius is non-zero, selection is limited to parents within +/- r of location"
+  [pop location {:keys [trivial-geography-radius]}]
+  (println @testcase-weights)
+  (println (bias-ordering-of-cases-based-on-rank))
+ 
+  (loop [survivors (retain-one-individual-per-error-vector pop)
+         cases (bias-ordering-of-cases-based-on-rank)]
+    (if (or (empty? cases)
+            (empty? (rest survivors)))
+      (lrand-nth survivors)
+      (let [min-err-for-case (apply min (map #(nth % (first cases))
+                                             (map #(:errors %) survivors)))]
+        (recur (filter #(= (nth (:errors %) (first cases)) min-err-for-case)
+                       survivors)
+               (rest cases))))))
+
+
+
+;(defn bias-ordering-of-cases-based-on-rank-probabilities-of-selection
+;  "Calculates the exact probability of each rank being selected out of n ranked
+;   cases with bias ordering of test cases above."
+;  [n]
+;  (map (fn [i]
+;         (float (/ (apply + (map #(/ 1 %)
+;                                 (range (inc i) (inc n))))
+;                   n)))
   
 
 
@@ -330,6 +393,7 @@
                                      (lexicase-selection pop-with-meta-errors location argmap))
                    :weighted-lexicase (weighted-lexicase-selection pop-with-meta-errors location argmap)
                    :bias-lexicase (bias-lexicase-selection pop-with-meta-errors location argmap)
+                   :ranked-lexicase (ranked-lexicase-selection pop-with-meta-errors location argmap)
                    :uniform (uniform-selection pop-with-meta-errors)
                    (throw (Exception. (str "Unrecognized argument for parent-selection: "
                                            parent-selection))))]

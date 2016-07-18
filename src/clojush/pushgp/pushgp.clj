@@ -91,6 +91,7 @@
           ;;----------------------------------------
           ;; Arguments related to parent selection
           ;;----------------------------------------
+          
           :parent-selection :weighted-lexicase ;; The parent selection method. Options include :tournament, :lexicase, :elitegroup-lexicase, :uniform :leaky-lexicase
           :lexicase-leakage 0.1 ;; If using leaky lexicase selection, the percentage of selection events that will return random (tourny 1) individuals
           :weighted-lexicase-bias :average ;; If using weighted-lexicase, the chosen bias to weight by. Options are :number-of-zeros, :sum, :average, :number-of-nonzeros, :variance, :number-of-zeros-inverse, :median 
@@ -311,6 +312,8 @@ into @push-argmap first."
           (when (= (:parent-selection @push-argmap) :weighted-lexicase)
             (calculate-test-case-weights pop-agents @push-argmap))
           (when (= (:parent-selection @push-argmap) :bias-lexicase)
+            (calculate-test-case-weights pop-agents @push-argmap))
+          (when (= (:parent-selection @push-argmap) :ranked-lexicase)
             (calculate-test-case-weights pop-agents @push-argmap))
           ;; create global structure to support elite group lexicase selection
           (when (= (:parent-selection @push-argmap) :elitegroup-lexicase)
