@@ -253,8 +253,7 @@ If trivial-geography-radius is non-zero, selection is limited to parents within 
   "Returns an individual that does the best on the fitness cases when considered one at a
    time in a biased order determined by a rank of some metric.  If trivial-geography-radius is non-zero, selection is limited to parents within +/- r of location"
   [pop location {:keys [trivial-geography-radius]}]
-  (println @testcase-weights)
-  (println (bias-ordering-of-cases-based-on-rank))
+  
  
   (loop [survivors (retain-one-individual-per-error-vector pop)
          cases (bias-ordering-of-cases-based-on-rank)]
